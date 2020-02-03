@@ -66,3 +66,97 @@
 	func main() {
 		pic.Show(Pic)
 	}
+	
+#3
+	
+	package main
+
+import (
+	 
+	
+	"strings"
+	"golang.org/x/tour/wc"
+)
+
+func WordCount(s string) map[string]int {
+	
+	 mp := make(map[string]int)
+	arr := strings.Fields(s)
+	for _ ,value := range arr {
+		  _, ok := mp[value] 
+		if ok {
+			mp[value] = mp[value]+1	
+		} else {
+			mp[value]=1
+		}
+		
+	}
+	 
+	return mp
+}
+
+func main() {
+	wc.Test(WordCount)
+}
+
+
+#4
+
+package main
+
+import "fmt"
+
+// fibonacci is a function that returns
+// a function that returns an int.
+func fibonacci() func() int {
+	nMin2 :=0
+	nMin1 :=1
+	var oldFib int
+	return func() int {
+
+		oldFib= nMin2
+		nMin2 = nMin1
+		nMin1 = oldFib + nMin1
+		
+		return oldFib
+		  	
+	}
+	
+}
+
+func main() {
+	f := fibonacci()
+	for i := 0; i < 10; i++ {
+		fmt.Println(f())
+	}
+}
+
+#5
+
+package main
+
+import "fmt"
+
+type IPAddr [4]byte
+
+// TODO: Add a "String() string" method to IPAddr.
+/*
+
+*/func (ip IPAddr) String() string {
+	 
+	return fmt.Sprintf("%d.%d.%d.%d ", ip[0],ip[1],ip[2],ip[3] )
+}
+func main() {
+	hosts := map[string]IPAddr{
+		"loopback":  {255, 0, 0, 1},
+		"googleDNS": {8, 8, 8, 8},
+	}
+	 
+	 for name, ip := range hosts {
+ 
+		
+		 fmt.Printf("%v: %v\n", name, ip)
+	} 
+}
+ 
+
