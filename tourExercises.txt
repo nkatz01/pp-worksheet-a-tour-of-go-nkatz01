@@ -1,0 +1,68 @@
+#1
+
+	package main
+
+	import (
+		"fmt"
+		"math"
+	)
+
+	func Sqrt(x float64) float64 {
+		var z float64  = 1.0
+		var newz float64
+	 //fmt.Println(-0.99 <math.Pow(10,-5))
+		//var x float64 = 2
+		count :=0 
+		for  newz = ((z + x /z) / 2); math.Abs(newz-z)>math.Pow(10,-5); count++ 	{
+			// fmt.Println(math.Pow(10,-5))
+			z = newz
+			newz  = ((z + x /z) / 2)
+		
+			// newz -= (z*z - x) / (2*z)
+			
+			 
+			 
+			fmt.Println(count)
+		}
+		return newz
+	}
+
+	func main() {
+		fmt.Printf("%f \n" ,Sqrt(2))
+		//fmt.Println(Sqrt(2))
+	}
+		//val float64 =  math.Pow(10,-5)
+		//va  float64 = math.Abs(val)
+
+
+
+
+
+
+
+# 2
+
+	package main
+
+	import "golang.org/x/tour/pic"
+	//import "math"
+
+	func Pic(dx, dy int) [][]uint8 {
+		
+		arr := make([][]uint8, dy)
+		for i := range arr {
+			
+			innerArr := make([]uint8, dx)
+			for j := range innerArr{
+				innerArr[j] = uint8((i+j)/2 )
+				//innerArr[j] = uint8(math.Pow(float64(i),float64(j)))
+				//innerArr[j] = uint8((ixj)/2 )
+			}
+			arr[i] = innerArr
+		}
+		return arr
+	}
+
+	func main() {
+		pic.Show(Pic)
+	}
