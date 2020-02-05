@@ -249,39 +249,41 @@ import (
 	"io"
 	"os"
 	"strings"
-	"fmt"
+
+	"unicode"
 )
 
 type rot13Reader struct {
 	r io.Reader
 }
-func (r13 rot13Reader) Read(b []byte) (n int, err error){
-	/* str := 'z'
-	  if str<='m' {
-	 	str= str+13
-		} else {
-		str = str-13
-}*/
 
-	return r13.r.Read(b)
+func (r13 rot13Reader) Read(b []byte) (n int, err error) {
+
+	i, err := r13.r.Read(b)
+	str := string(b)
+	var decipherd string
+	for _, l := range str {
+
+		if !unicode.IsSpace(l) {
+			if l <= 'm' {
+				l = l + 13
+			} else {
+				l = l - 13
+			}
+		}
+		decipherd += string(l)
+	}
+
+	copy(b, decipherd)
+	return i, err
 }
-
 
 func main() {
 	s := strings.NewReader("Lbh penpxrq gur pbqr!")
 	r := rot13Reader{s}
-	io.Copy(os.Stdout, &r)
-		//fmt.Println( )
-str:= "abc"
-//arr := strings.Split(str, "," )
-//array := make([]rune(arr))
-for _,v := range str{
-v = v+1
-fmt.Printf("%T", v)
 
-}
-	//fmt.Printf("%+q", str)
-	
+	io.Copy(os.Stdout, &r)
+
 }
 
 
