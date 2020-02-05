@@ -168,4 +168,59 @@ func main() {
 	}
 }
 
+#6
+
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type ErrNegativeSqrt float64
+
+func (e ErrNegativeSqrt) Error() string {
+
+	return fmt.Sprintf("cannot Sqrt negative number: %v", float64(e))
+
+}
+
+func Sqrt(x float64) (float64, error) {
+	if x < 0 {
+
+		return 0, ErrNegativeSqrt(x)
+	}
+
+	var z float64 = 1.0
+	var newz float64
+
+	count := 0
+	for newz = ((z + x/z) / 2); math.Abs(newz-z) > math.Pow(10, -5); count++ {
+
+		z = newz
+		newz = ((z + x/z) / 2)
+
+		fmt.Println(count)
+	}
+	return newz, nil
+}
+
+func main() {
+
+	format(Sqrt(2))
+	format(Sqrt(-2))
+}
+func format(i float64, err error) {
+
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Sqrt is:", i)
+	}
+}
+
+#7
+
+
+
 
