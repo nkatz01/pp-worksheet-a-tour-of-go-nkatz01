@@ -261,7 +261,7 @@ func (r13 rot13Reader) Read(b []byte) (n int, err error) {
 
 	i, err := r13.r.Read(b)
 	str := string(b)
-	var decipherd string
+	var deciphered string
 	for _, l := range str {
 
 		if !unicode.IsSpace(l) {
@@ -271,10 +271,10 @@ func (r13 rot13Reader) Read(b []byte) (n int, err error) {
 				l = l - 13
 			}
 		}
-		decipherd += string(l)
+		deciphered += string(l)
 	}
 
-	copy(b, decipherd)
+	copy(b, deciphered)
 	return i, err
 }
 
