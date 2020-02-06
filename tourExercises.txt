@@ -319,53 +319,89 @@ func main() {
 
 }
 
-#10
-
+#10 
 package main
 
 import (
 	"fmt"
 	"golang.org/x/tour/tree"
-	 "time"
+ 	"sort"
 )
 
 // Walk walks the tree t sending all values
 // from the tree to the channel ch.
-func Walk(t *tree.Tree, ch chan int){
- 		 	
-		//	
-		 if t.Left == nil && t.Right == nil {
-			ch <- t.Value
-		 } else {
-			 if t.Left != nil {
-				  Walk(t.Left, ch)
-			 }
-			 if t.Right != nil{
-				 Walk(t.Right, ch)
-			 }
-		  
-			ch <- t.Value
-		} 		//ch <- t.Value
+func Walk(t *tree.Tree, ch chan int) {
 
+	
+	if t.Left == nil && t.Right == nil {
+		ch <- t.Value
+	} else {
+		if t.Left != nil {
+			Walk(t.Left, ch)
+		}
+		if t.Right != nil {
+			Walk(t.Right, ch)
+		}
+
+		ch <- t.Value
+	}
 }
 
 // Same determines whether the trees
 // t1 and t2 contain the same values.
-//func Same(t1, t2 *tree.Tree) bool
+func Same(t1, t2 *tree.Tree) bool {
+	arr1 := make([]int, 0)
+	arr2 := make([]int, 0)
 
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+	go Walk(t1, ch1)
+	go Walk(t2, ch2)
+
+	for i := 1; i <= 20; i++ {
+
+		select {
+		case res := <-ch1:
+			arr1 = append(arr1, res)
+		case res := <-ch2:
+			arr2 = append(arr2, res)
+
+		}
+	}
+
+	sort.Ints(arr1)
+	sort.Ints(arr2)
+	
+
+	if len(arr1) != len(arr2) {
+		return false
+	}
+	for i, v := range arr1 {
+		if v != arr2[i] {
+			return false
+		}
+	}
+	return true
+
+}
 
 func main() {
-	tr := tree.New(10)
-	fmt.Println(tr)
-	ch := make (chan int,10)
+	//tr := tree.New(10)
+	//fmt.Println(tr)
+	ch := make(chan int)
 	go Walk(tree.New(10), ch)
-	  	time.Sleep(5 * time.Second)
+ 
+	for i := 1; i <= 10; i++ {
 
- for i := 1; i <= 10; i++ {
 		fmt.Println(<-ch)
-	 }
+
+	}
+
+	fmt.Println(Same(tree.New(1), tree.New(1)))
+	fmt.Println(Same(tree.New(1), tree.New(2)))
+
 }
-//Same(tree.New(1), tree.New(2))
-//Same(tree.New(1), tree.New(1))
+
+
 
 
