@@ -407,6 +407,7 @@ package main
 
 import (
 	"fmt"
+	"errors"
 )
 
 type Fetcher interface {
@@ -417,13 +418,14 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string,  fetcher Fetcher, cache map[string]string) {
+func Crawl(url string,  fetcher Fetcher, cache Cache) {
 	// TODO: Fetch URLs in parallel.
 	// TODO: Don't fetch the same URL twice.
 	// This implementation doesn't do either:
 	 
 	body, urls, err := fetcher.Fetch(url)
 	 cache[url]=body
+	//fmt.Println(err)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -440,10 +442,11 @@ func Crawl(url string,  fetcher Fetcher, cache map[string]string) {
 }
 
 func main() {
-	cache := make(map[string]string)
+	cache := make(Cache)
+	
  	Crawl("https://golang.org/",   fetcher,cache)
 }
- //type Cache map[string]string
+type Cache map[string]string
 
  // fakeFetcher is Fetcher that returns canned results.
 type fakeFetcher map[string]*fakeResult
@@ -457,7 +460,7 @@ func (f fakeFetcher) Fetch(url string) (string, []string, error) {
 	if res, ok := f[url]; ok {
 		return res.body, res.urls, nil
 	}
-	return "", nil, fmt.Errorf("not found: %s", url)
+	return "", nil, errors.New("not found: " + url) // fmt.Errorf("not found: %s", url)
 }
 
 // fetcher is a populated fakeFetcher.
@@ -495,6 +498,4 @@ var fetcher = fakeFetcher{
 	},
 	
 }
-
-
 
