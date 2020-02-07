@@ -429,26 +429,33 @@ func Crawl(url string,  fetcher Fetcher, cache Cache, ch chan Cache) {
 	if err != nil {
 		cache[url]=err.Error()
 		//fmt.Println(cache[url])
-		 fmt.Println(err)
+		//  fmt.Println(err.Error())
 		//return
-		
-	}
-	cache[url]=body
-	fmt.Printf("found: %s %q\n", url, body)
+		ch <- cache
+	}	else {
+	cache[url]="found: "+body
+	
+	//fmt.Printf("found: %s %q\n", url, body)
 	
 	//fmt.Println(cache)
 	for _, u := range urls {
 		if _, ok := cache[u]; !ok {
 		Crawl(u,   fetcher,cache, ch)
+			}
 		}
+	//ch <- cache
 	}
-	return
 }
 
 func main() {
 	cache := make(Cache)
 	ch := make(chan Cache)
- 	Crawl("https://golang.org/",   fetcher,cache, ch)
+ 	go Crawl("https://golang.org/",   fetcher,cache, ch)
+	//go Crawl("https://golang.org/",   fetcher,cache, ch)
+	//var m Cache   = ch 
+	 
+	 fmt.Println(<-ch)
+	  
 }
 type Cache map[string]string
 
