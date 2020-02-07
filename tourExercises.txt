@@ -403,13 +403,19 @@ func main() {
 }
 
 #11
+
 package main
 
 import (
 	"fmt"
 	"errors"
+	"sync"
+	"time"
 )
-
+	type SafeCounter struct {
+	mu sync.Mutex
+	c  map[string]string
+}
 type Fetcher interface {
 	// Fetch returns the body of URL and
 	// a slice of URLs found on that page.
@@ -418,46 +424,53 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string,  fetcher Fetcher, cache Cache, ch chan Cache) {
-	// TODO: Fetch URLs in parallel.
-	// TODO: Don't fetch the same URL twice.
-	// This implementation doesn't do either:
+func(cache *SafeCounter) Crawl(url string,  fetcher Fetcher) {
 	 
+	
+	  
 	body, urls, err := fetcher.Fetch(url)
+	 cache.mu.Lock() 
 	
-	//fmt.Println(err)
 	if err != nil {
-		cache[url]=err.Error()
-		//fmt.Println(cache[url])
-		//  fmt.Println(err.Error())
-		//return
-		ch <- cache
+			 
+		cache.c[url]=err.Error()
+		
+		
 	}	else {
-	cache[url]="found: "+body
-	
-	//fmt.Printf("found: %s %q\n", url, body)
-	
-	//fmt.Println(cache)
+		 
+	 cache.c[url]="found: "+body
+
 	for _, u := range urls {
-		if _, ok := cache[u]; !ok {
-		Crawl(u,   fetcher,cache, ch)
+		 
+		if _, ok := cache.c[u]; !ok {
+			
+	 go	 cache.Crawl(u,   fetcher)
 			}
 		}
-	//ch <- cache
+	  
 	}
+			cache.mu.Unlock()
+return
+	
 }
 
 func main() {
-	cache := make(Cache)
-	ch := make(chan Cache)
- 	go Crawl("https://golang.org/",   fetcher,cache, ch)
-	//go Crawl("https://golang.org/",   fetcher,cache, ch)
-	//var m Cache   = ch 
-	 
-	 fmt.Println(<-ch)
+	cache := SafeCounter{c: make(map[string]string)}
+	
+  	for i:=0; i<=4; i++{ 
+ 	go cache.Crawl("https://golang.org/",   fetcher )
+ 	 }
+ 	 
+	time.Sleep(50 * time.Millisecond)
+	  	 fmt.Println(cache)
+
+
+
+	
+
 	  
 }
-type Cache map[string]string
+ type Cache map[string]string
 
  // fakeFetcher is Fetcher that returns canned results.
 type fakeFetcher map[string]*fakeResult
