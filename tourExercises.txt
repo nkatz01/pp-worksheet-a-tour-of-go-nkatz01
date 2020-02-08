@@ -424,46 +424,46 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func(cache *SafeCounter) Crawl(url string,  fetcher Fetcher) {
-		 	  cache.mu.Lock() 
-	  		 	 defer cache.mu.Unlock()
+func(cache *SafeCounter) Crawl(  fetcher Fetcher) {
+		 	
 		 
-	
-		if _, ok := cache.c[url];  ok{
-	
-		return
-	}
-	  
-	body, urls, err := fetcher.Fetch(url)
+	for url,_ := range cache.c{
 
+		body, urls, err := fetcher.Fetch(url)//get me the "body" and the child "urls"
+		if body!=""{
+			if bod, _ := cache.c[url];  bod!=body{ 	 //url is there AND body is not there already
+				cache.mu.Lock() 
+				cache.c[url]=err.Error()//insert the body in cache
+				cache.mu.Unlock()
 
-	
-	if err != nil {
-			 
-		cache.c[url]=err.Error()
-		
-		
-	}	else {
-		 
-	 cache.c[url]="found: "+body
-	
-	for _, u := range urls {
-	 go	 cache.Crawl(u,   fetcher)
-			 
+				for _, u := range urls {
+
+					if _, ok := cache.c[u];  !ok{
+
+						cache.mu.Lock() 
+						cache.c[u]=""//insert the urls too (with empty bodies) in cache
+						cache.mu.Unlock()
+						//  go	 cache.Crawl( fetcher)
+
+					}
+				}
+			}
+		}else {
+				cache.mu.Lock() 
+				cache.c[url]=err.Error()//insert the body in cache
+			cache.mu.Unlock()
 		}
-	
-	  
 	}
-		
+	 return 
 
 	
 }
 
 func main() {
 	cache := SafeCounter{c: make(map[string]string)}
-	
+	cache.c["https://golang.org/"]=""
   	for i:=0; i<=4; i++{ 
- 	go cache.Crawl("https://golang.org/",   fetcher )
+ 	go cache.Crawl(    fetcher )
  	 }
  	 
 	time.Sleep(50 * time.Millisecond)
@@ -487,7 +487,7 @@ type fakeResult struct {
 
 func (f fakeFetcher) Fetch(url string) (string, []string, error) {
 	if res, ok := f[url]; ok {
-		return res.body, res.urls, nil
+		return res.body, res.urls, errors.New("found: " + res.body)
 	}
 	return "", nil, errors.New("not found: " + url) // fmt.Errorf("not found: %s", url)
 }
@@ -527,3 +527,4 @@ var fetcher = fakeFetcher{
 	},
 	
 }
+
