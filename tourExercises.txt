@@ -408,13 +408,12 @@ package main
 
 import (
 	"fmt"
-	"errors"
 	"sync"
-	"time"
 )
-	type SafeCounter struct {
+
+type SafeCounter struct {
 	mu sync.Mutex
- 	c  map[string]string
+	c  map[string]string
 }
 type Fetcher interface {
 	// Fetch returns the body of URL and
@@ -424,66 +423,53 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func(cache *SafeCounter) Crawl(  fetcher Fetcher, ch chan string)  {
-	 cache.mu.Lock()
-	defer cache.mu.Unlock()
-	var	url string
-		 
-	for url = range cache.c{
-		if  cache.c[url]==""{ //url is there AND body (whether found or not found) is not there already
+func (cache *SafeCounter) Crawl(url string, depth int, fetcher Fetcher, ch chan string) {
 
-			_, urls, err := fetcher.Fetch(url)//get me the "body" and the child "urls"
+	cache.mu.Lock()
+	ur, ok := cache.c[url]
+	cache.mu.Unlock()
+	tru := ok && ur == url || depth <= 0
 
-			//cache.mu.Lock() 
-			cache.c[url]=err.Error()//insert the body in cache
-			//cache.mu.Unlock()
+	if tru {
+		return
+
+	} else { //url  is not there already
+		cache.mu.Lock()
+		cache.c[url] = url
+		cache.mu.Unlock()
+
+		body, urls, err := fetcher.Fetch(url)
+		if err != nil {
+			ch <- "not found " + url
+		} else {
+			ch <- "found: " + url + body
 
 			for _, u := range urls {
-
-				if _, ok := cache.c[u];  !ok{
-					//cache.mu.Lock() 
-					cache.c[u]=""//insert the urls too (with empty bodies) in cache
-					//cache.mu.Unlock()
-
-				}
-
+				go cache.Crawl(u, depth-1, fetcher, ch)
 			}
-			for   range urls {
-				go	 cache.Crawl( fetcher, ch)
-			}
-
-
-		} 
+		}
 
 	}
-	  
-			ch<- cache.c[url]
 
-	
 }
 
 func main() {
 	cache := SafeCounter{c: make(map[string]string)}
-	cache.c["https://golang.org/"]=""
+	cache.c["https://golang.org/"] = ""
 	ch := make(chan string)
-  	for i:=0; i<=4; i++{ 
- 	go cache.Crawl(    fetcher , ch)
- 	  }
- 	 
-	time.Sleep(1 * time.Second)
-	  //	 fmt.Println(cache)
+	for i := 0; i <= 4; i++ {
+		go cache.Crawl("https://golang.org/", 4, fetcher, ch)
+	}
 
-for i:=0; i<=4; i++{ 
- fmt.Println(<-ch) 	 
+	for i := 0; i <= 4; i++ {
+		fmt.Println(<-ch)
+	}
+
 }
 
-	
+type Cache map[string]string
 
-	  
-}
- type Cache map[string]string
-
- // fakeFetcher is Fetcher that returns canned results.
+// fakeFetcher is Fetcher that returns canned results.
 type fakeFetcher map[string]*fakeResult
 
 type fakeResult struct {
@@ -493,9 +479,9 @@ type fakeResult struct {
 
 func (f fakeFetcher) Fetch(url string) (string, []string, error) {
 	if res, ok := f[url]; ok {
-		return res.body, res.urls, errors.New("found: " + res.body)
+		return res.body, res.urls, nil
 	}
-	return "", nil, errors.New("not found: " + url) // fmt.Errorf("not found: %s", url)
+	return "", nil, fmt.Errorf("not found: %s", url)
 }
 
 // fetcher is a populated fakeFetcher.
@@ -529,8 +515,6 @@ var fetcher = fakeFetcher{
 			"https://golang.org/",
 			"https://golang.org/pkg/",
 		},
-		
 	},
-	
 }
 
