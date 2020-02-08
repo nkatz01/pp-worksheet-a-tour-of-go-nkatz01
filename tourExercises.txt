@@ -424,37 +424,40 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func(cache *SafeCounter) Crawl(  fetcher Fetcher) {
-		 	
+func(cache *SafeCounter) Crawl(  fetcher Fetcher, ch chan string)  {
+	 cache.mu.Lock()
+	defer cache.mu.Unlock()
+	var	url string
 		 
-	for url,_ := range cache.c{
+	for url = range cache.c{
+		if  cache.c[url]==""{ //url is there AND body (whether found or not found) is not there already
 
-		body, urls, err := fetcher.Fetch(url)//get me the "body" and the child "urls"
-		if body!=""{
-			if bod, _ := cache.c[url];  bod!=body{ 	 //url is there AND body is not there already
-				cache.mu.Lock() 
-				cache.c[url]=err.Error()//insert the body in cache
-				cache.mu.Unlock()
+			_, urls, err := fetcher.Fetch(url)//get me the "body" and the child "urls"
 
-				for _, u := range urls {
+			//cache.mu.Lock() 
+			cache.c[url]=err.Error()//insert the body in cache
+			//cache.mu.Unlock()
 
-					if _, ok := cache.c[u];  !ok{
+			for _, u := range urls {
 
-						cache.mu.Lock() 
-						cache.c[u]=""//insert the urls too (with empty bodies) in cache
-						cache.mu.Unlock()
-						//  go	 cache.Crawl( fetcher)
+				if _, ok := cache.c[u];  !ok{
+					//cache.mu.Lock() 
+					cache.c[u]=""//insert the urls too (with empty bodies) in cache
+					//cache.mu.Unlock()
 
-					}
 				}
+
 			}
-		}else {
-				cache.mu.Lock() 
-				cache.c[url]=err.Error()//insert the body in cache
-			cache.mu.Unlock()
-		}
+			for   range urls {
+				go	 cache.Crawl( fetcher, ch)
+			}
+
+
+		} 
+
 	}
-	 return 
+	  
+			ch<- cache.c[url]
 
 	
 }
@@ -462,14 +465,17 @@ func(cache *SafeCounter) Crawl(  fetcher Fetcher) {
 func main() {
 	cache := SafeCounter{c: make(map[string]string)}
 	cache.c["https://golang.org/"]=""
+	ch := make(chan string)
   	for i:=0; i<=4; i++{ 
- 	go cache.Crawl(    fetcher )
- 	 }
+ 	go cache.Crawl(    fetcher , ch)
+ 	  }
  	 
-	time.Sleep(50 * time.Millisecond)
-	  	 fmt.Println(cache)
+	time.Sleep(1 * time.Second)
+	  //	 fmt.Println(cache)
 
-
+for i:=0; i<=4; i++{ 
+ fmt.Println(<-ch) 	 
+}
 
 	
 
