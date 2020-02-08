@@ -414,7 +414,7 @@ import (
 )
 	type SafeCounter struct {
 	mu sync.Mutex
-	c  map[string]string
+ 	c  map[string]string
 }
 type Fetcher interface {
 	// Fetch returns the body of URL and
@@ -425,11 +425,18 @@ type Fetcher interface {
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
 func(cache *SafeCounter) Crawl(url string,  fetcher Fetcher) {
-	 
+		 	  cache.mu.Lock() 
+	  		 	 defer cache.mu.Unlock()
+		 
 	
+		if _, ok := cache.c[url];  ok{
+	
+		return
+	}
 	  
 	body, urls, err := fetcher.Fetch(url)
-	 cache.mu.Lock() 
+
+
 	
 	if err != nil {
 			 
@@ -439,18 +446,16 @@ func(cache *SafeCounter) Crawl(url string,  fetcher Fetcher) {
 	}	else {
 		 
 	 cache.c[url]="found: "+body
-
+	
 	for _, u := range urls {
-		 
-		if _, ok := cache.c[u]; !ok {
-			
 	 go	 cache.Crawl(u,   fetcher)
-			}
+			 
 		}
+	
 	  
 	}
-			cache.mu.Unlock()
-return
+		
+
 	
 }
 
