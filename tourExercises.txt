@@ -404,6 +404,8 @@ func main() {
 
 #11
 
+
+
 package main
 
 import (
@@ -427,14 +429,15 @@ func (cache *SafeCounter) Crawl(url string, depth int, fetcher Fetcher, ch chan 
 
 	cache.mu.Lock()
 	ur, ok := cache.c[url]
-	cache.mu.Unlock()
+	
 	tru := ok && ur == url || depth <= 0
 
 	if tru {
+	cache.mu.Unlock()
 		return
-
+		
 	} else { //url  is not there already
-		cache.mu.Lock()
+	
 		cache.c[url] = url
 		cache.mu.Unlock()
 
